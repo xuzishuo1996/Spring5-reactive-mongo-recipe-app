@@ -14,7 +14,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Disabled("there are bugs")
+@Disabled("use local db: passed")
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
 public class RecipeServiceIT {

@@ -14,7 +14,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Disabled("there are bugs")
+@Disabled("use local db: passed")
 @ExtendWith(SpringExtension.class)
 @DataMongoTest
 class UnitOfMeasureRepositoryIT {
