@@ -1,6 +1,7 @@
 package guru.springframework.spring5reactivemongorecipeapp.services;
 
 import guru.springframework.spring5reactivemongorecipeapp.commands.IngredientCommand;
+import guru.springframework.spring5reactivemongorecipeapp.commands.UnitOfMeasureCommand;
 import guru.springframework.spring5reactivemongorecipeapp.converters.IngredientCommandToIngredient;
 import guru.springframework.spring5reactivemongorecipeapp.converters.IngredientToIngredientCommand;
 import guru.springframework.spring5reactivemongorecipeapp.converters.UnitOfMeasureCommandToUnitOfMeasure;
@@ -8,11 +9,13 @@ import guru.springframework.spring5reactivemongorecipeapp.converters.UnitOfMeasu
 import guru.springframework.spring5reactivemongorecipeapp.domain.Ingredient;
 import guru.springframework.spring5reactivemongorecipeapp.domain.Recipe;
 import guru.springframework.spring5reactivemongorecipeapp.repositories.RecipeRepository;
-import guru.springframework.spring5reactivemongorecipeapp.repositories.UnitOfMeasureRepository;
+import guru.springframework.spring5reactivemongorecipeapp.repositories.reactive.RecipeReactiveRepository;
+import guru.springframework.spring5reactivemongorecipeapp.repositories.reactive.UnitOfMeasureReactiveRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import reactor.core.publisher.Mono;
 
 import java.util.Optional;
 
@@ -25,10 +28,13 @@ class IngredientServiceImplTest {
     private final IngredientCommandToIngredient ingredientCommandToIngredient;
 
     @Mock
+    RecipeReactiveRepository recipeReactiveRepository;
+
+    @Mock
     RecipeRepository recipeRepository;
 
     @Mock
-    UnitOfMeasureRepository unitOfMeasureRepository;
+    UnitOfMeasureReactiveRepository unitOfMeasureRepository;
 
     IngredientService ingredientService;
 
@@ -43,7 +49,7 @@ class IngredientServiceImplTest {
         MockitoAnnotations.initMocks(this);
 
         ingredientService = new IngredientServiceImpl(ingredientToIngredientCommand, ingredientCommandToIngredient,
-                recipeRepository, unitOfMeasureRepository);
+                recipeRepository, recipeReactiveRepository, unitOfMeasureRepository);
     }
 
     @Test
@@ -66,14 +72,14 @@ class IngredientServiceImplTest {
         recipe.addIngredient(ingredient3);
         Optional<Recipe> recipeOptional = Optional.of(recipe);
 
-        when(recipeRepository.findById(anyString())).thenReturn(recipeOptional);
+        when(recipeReactiveRepository.findById(anyString())).thenReturn(Mono.just(recipe));
 
         //then
         IngredientCommand ingredientCommand = ingredientService.findByRecipeIdAndIngredientId("1", "3").block();
 
         //when
         assertEquals("3", ingredientCommand.getId());
-        verify(recipeRepository, times(1)).findById(anyString());
+        verify(recipeReactiveRepository, times(1)).findById(anyString());
     }
 
     @Test
@@ -82,6 +88,8 @@ class IngredientServiceImplTest {
         IngredientCommand command = new IngredientCommand();
         command.setId("3");
         command.setRecipeId("2");
+        command.setUom(new UnitOfMeasureCommand());
+        command.getUom().setId("1234");
 
         Optional<Recipe> recipeOptional = Optional.of(new Recipe());
 
@@ -90,7 +98,7 @@ class IngredientServiceImplTest {
         savedRecipe.getIngredients().iterator().next().setId("3");
 
         when(recipeRepository.findById(anyString())).thenReturn(recipeOptional);
-        when(recipeRepository.save(any())).thenReturn(savedRecipe);
+        when(recipeReactiveRepository.save(any())).thenReturn(Mono.just(savedRecipe));
 
         //when
         IngredientCommand savedCommand = ingredientService.saveIngredientCommand(command).block();
@@ -98,7 +106,7 @@ class IngredientServiceImplTest {
         //then
         assertEquals("3", savedCommand.getId());
         verify(recipeRepository, times(1)).findById(anyString());
-        verify(recipeRepository, times(1)).save(any(Recipe.class));
+        verify(recipeReactiveRepository, times(1)).save(any(Recipe.class));
     }
 
     @Test
