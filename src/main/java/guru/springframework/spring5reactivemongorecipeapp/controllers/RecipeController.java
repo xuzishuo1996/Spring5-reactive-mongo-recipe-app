@@ -60,6 +60,7 @@ public class RecipeController {
 
         RecipeCommand savedCommand = recipeService.saveRecipeCommand(command);
 
+        // error: do not getId here. "/recipe//show"
         return "redirect:/recipe/" + savedCommand.getId() + "/show";
     }
 
